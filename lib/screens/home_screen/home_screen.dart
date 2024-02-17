@@ -15,6 +15,7 @@ class _HomeScreenState extends State<HomeScreen> {
   bool _isListening = false;
   String _text = '';
   double _confidence = 1.0;
+  List<String> listOfRecognizedText = [];
 
   @override
   void initState() {
@@ -29,7 +30,6 @@ class _HomeScreenState extends State<HomeScreen> {
         print('onStatus: $val');
         if (val == 'notListening') {
           Future.delayed(Duration(seconds: 1), () {
-            // Reinicia la escucha si se detuvo automáticamente
             _continueListening();
           });
         }
@@ -39,12 +39,20 @@ class _HomeScreenState extends State<HomeScreen> {
     if (available) {
       setState(() => _isListening = true);
       _speech.listen(
-        onResult: (val) => setState(() {
-          _text = val.recognizedWords;
-          if (val.hasConfidenceRating && val.confidence > 0) {
-            _confidence = val.confidence;
-          }
-        }),
+        onResult: (val) {
+          setState(() {
+            _text = val.recognizedWords;
+            // Aquí agregamos el texto a la lista cada vez que recibimos un nuevo resultado.
+            if (_text.isNotEmpty) {
+              listOfRecognizedText.add(_text);
+            }
+
+            if (val.hasConfidenceRating && val.confidence > 0) {
+              _confidence = val.confidence;
+            }
+          });
+        },
+        listenFor: Duration(seconds: 60),
         localeId: 'es-ES',
       );
     }
@@ -53,11 +61,16 @@ class _HomeScreenState extends State<HomeScreen> {
   void _continueListening() {
     if (_isListening) {
       _speech.listen(
-        onResult: (val) => setState(() {
-          _text = val.recognizedWords;
-          // Agregar lógica para manejar el texto reconocido
-        }),
-        listenFor: Duration(seconds: 60), // Ajusta según necesidad
+        onResult: (val) {
+          setState(() {
+            _text = val.recognizedWords;
+            // Similarmente, agregamos el texto a la lista en el método de continuación.
+            if (_text.isNotEmpty) {
+              listOfRecognizedText.add(_text);
+            }
+          });
+        },
+        listenFor: Duration(seconds: 60),
       );
     }
   }
@@ -88,10 +101,10 @@ class _HomeScreenState extends State<HomeScreen> {
               "Confidence: ${(_confidence * 100.0).toStringAsFixed(1)}%",
             ),
             SizedBox(height: 20),
-            Text(
-              _text,
-              style: const TextStyle(fontSize: 20),
-            ),
+            if (listOfRecognizedText.isNotEmpty)
+              Text(
+                listOfRecognizedText.join(' '),
+              )
           ],
         ),
       ),
