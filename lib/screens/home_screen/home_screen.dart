@@ -1,101 +1,96 @@
-import 'package:audio_service/audio_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_sound/flutter_sound.dart';
-import '../../widgets/AppBar/template_app_bar.dart';
-
 import 'package:path_provider/path_provider.dart';
-
-class MyAudioHandler extends BaseAudioHandler with SeekHandler {
-  final FlutterSoundRecorder _recorder = FlutterSoundRecorder();
-  final FlutterSoundPlayer _player = FlutterSoundPlayer();
-
-  bool _isRecording = false;
-  String? _tempFilePath;
-
-  Future<void> init() async {
-    await _recorder.openRecorder();
-    await _player.openPlayer();
-    final tempDir = await getTemporaryDirectory();
-    _tempFilePath = '${tempDir.path}/grabacion.aac';
-  }
-
-  Future<void> startRecording() async {
-    await _recorder.startRecorder(toFile: _tempFilePath);
-    _isRecording = true;
-  }
-
-  Future<void> stopRecording() async {
-    await _recorder.stopRecorder();
-    _isRecording = false;
-  }
-
-  Future<void> playRecording() async {
-    if (_tempFilePath != null) {
-      await _player.startPlayer(fromURI: _tempFilePath);
-    }
-  }
-
-  Future<void> stopPlaying() async {
-    await _player.stopPlayer();
-  }
-}
-
-late final AudioHandler _audioHandler;
+import 'package:speech_to_text/speech_to_text.dart' as stt;
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+  const HomeScreen({Key? key}) : super(key: key);
 
   @override
-  State<HomeScreen> createState() => _HomeScreenState();
+  _HomeScreenState createState() => _HomeScreenState();
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  late final stt.SpeechToText _speech;
+  bool _isListening = false;
+  String _text = '';
+  double _confidence = 1.0;
+
   @override
   void initState() {
     super.initState();
-    initAudioService();
+    _speech = stt.SpeechToText();
   }
 
-  Future<void> initAudioService() async {
-    _audioHandler = await AudioService.init(
-      builder: () => MyAudioHandler(),
-      config: const AudioServiceConfig(
-        androidNotificationChannelId: 'com.yourcompany.yourapp.audio',
-        androidNotificationChannelName: 'Audio playback',
-        androidNotificationOngoing: true,
-      ),
+  void _startListening() async {
+    bool available = await _speech.initialize(
+      finalTimeout: Duration(seconds: 60),
+      onStatus: (val) {
+        print('onStatus: $val');
+        if (val == 'notListening') {
+          Future.delayed(Duration(seconds: 1), () {
+            // Reinicia la escucha si se detuvo automáticamente
+            _continueListening();
+          });
+        }
+      },
+      onError: (val) => print('onError: $val'),
     );
-    await (_audioHandler as MyAudioHandler).init();
+    if (available) {
+      setState(() => _isListening = true);
+      _speech.listen(
+        onResult: (val) => setState(() {
+          _text = val.recognizedWords;
+          if (val.hasConfidenceRating && val.confidence > 0) {
+            _confidence = val.confidence;
+          }
+        }),
+        localeId: 'es-ES',
+      );
+    }
+  }
+
+  void _continueListening() {
+    if (_isListening) {
+      _speech.listen(
+        onResult: (val) => setState(() {
+          _text = val.recognizedWords;
+          // Agregar lógica para manejar el texto reconocido
+        }),
+        listenFor: Duration(seconds: 60), // Ajusta según necesidad
+      );
+    }
+  }
+
+  void _stopListening() async {
+    setState(() => _isListening = false);
+    _speech.stop();
   }
 
   @override
   Widget build(BuildContext context) {
+    debugPrint(_text);
     return Scaffold(
-      appBar: EscribaAppBar(
-        title: 'Home',
+      appBar: AppBar(
+        title: const Text('Speech to Text'),
       ),
-      body: Center(
+      body: SingleChildScrollView(
+        reverse: true,
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            Text('Welcome'),
             ElevatedButton(
-              onPressed: () async {
-                await (_audioHandler as MyAudioHandler).startRecording();
-              },
-              child: Text('Start Recording'),
+              onPressed: _isListening ? _stopListening : _startListening,
+              child: Text(_isListening ? 'Stop Recording' : 'Start Recording'),
             ),
-            ElevatedButton(
-              onPressed: () async {
-                await (_audioHandler as MyAudioHandler).stopRecording();
-              },
-              child: Text('Stop Recording'),
+            SizedBox(height: 20),
+            Text(
+              "Confidence: ${(_confidence * 100.0).toStringAsFixed(1)}%",
             ),
-            ElevatedButton(
-              onPressed: () async {
-                await (_audioHandler as MyAudioHandler).playRecording();
-              },
-              child: Text('Play Recording'),
+            SizedBox(height: 20),
+            Text(
+              _text,
+              style: const TextStyle(fontSize: 20),
             ),
           ],
         ),
