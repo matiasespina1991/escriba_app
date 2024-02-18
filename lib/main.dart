@@ -8,20 +8,23 @@ import 'package:escriba_app/theme/EscribaTheme.dart';
 import 'package:provider/provider.dart';
 import 'config.dart';
 
-Future<void> main() async {
-  WidgetsFlutterBinding
-      .ensureInitialized(); // Asegura la inicialización de widgets
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
 
-  // Solicita permisos aquí
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+
   await requestPermissions();
 
   runApp(const MyApp());
 }
 
 Future<void> requestPermissions() async {
-  // Solicita todos los permisos que necesitas al inicio
   await Permission.microphone.request();
-  // Añade más permisos según sea necesario
 }
 
 class MyApp extends StatelessWidget {
@@ -63,7 +66,7 @@ class _MainScreenState extends State<MainScreen> {
         if (!isAuthenticated) {
           return const LoginScreen();
         }
-        return const HomeScreen();
+        return const SpeechToTextScreen();
       },
       child: const LoadingScreen(),
     );

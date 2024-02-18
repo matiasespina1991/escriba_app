@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "107683862323",
+    "project_id": "escriba-app-302f5",
+    "storage_bucket": "escriba-app-302f5.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:107683862323:android:4805f4cdbefb9eec39d046",
+        "android_client_info": {
+          "package_name": "com.matiasespina1991.escriba_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDA80fJ2RSxJhNWxbxiOkjLOckTXjPsuKU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -1,16 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_sound/flutter_sound.dart';
-import 'package:path_provider/path_provider.dart';
+
 import 'package:speech_to_text/speech_to_text.dart' as stt;
 
-class HomeScreen extends StatefulWidget {
-  const HomeScreen({Key? key}) : super(key: key);
+class SpeechToTextScreen extends StatefulWidget {
+  const SpeechToTextScreen({Key? key}) : super(key: key);
 
   @override
-  _HomeScreenState createState() => _HomeScreenState();
+  _SpeechToTextScreenState createState() => _SpeechToTextScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _SpeechToTextScreenState extends State<SpeechToTextScreen> {
   late final stt.SpeechToText _speech;
   bool _isListening = false;
   String _text = '';
@@ -25,11 +24,11 @@ class _HomeScreenState extends State<HomeScreen> {
 
   void _startListening() async {
     bool available = await _speech.initialize(
-      finalTimeout: Duration(seconds: 60),
+      finalTimeout: const Duration(seconds: 60),
       onStatus: (val) {
         print('onStatus: $val');
         if (val == 'notListening') {
-          Future.delayed(Duration(seconds: 1), () {
+          Future.delayed(const Duration(seconds: 1), () {
             _continueListening();
           });
         }
@@ -42,7 +41,6 @@ class _HomeScreenState extends State<HomeScreen> {
         onResult: (val) {
           setState(() {
             _text = val.recognizedWords;
-            // Aquí agregamos el texto a la lista cada vez que recibimos un nuevo resultado.
             if (_text.isNotEmpty) {
               listOfRecognizedText.add(_text);
             }
@@ -52,7 +50,7 @@ class _HomeScreenState extends State<HomeScreen> {
             }
           });
         },
-        listenFor: Duration(seconds: 60),
+        listenFor: const Duration(seconds: 60),
         localeId: 'es-ES',
       );
     }
@@ -64,13 +62,12 @@ class _HomeScreenState extends State<HomeScreen> {
         onResult: (val) {
           setState(() {
             _text = val.recognizedWords;
-            // Similarmente, agregamos el texto a la lista en el método de continuación.
             if (_text.isNotEmpty) {
               listOfRecognizedText.add(_text);
             }
           });
         },
-        listenFor: Duration(seconds: 60),
+        listenFor: const Duration(seconds: 60),
       );
     }
   }
@@ -96,11 +93,11 @@ class _HomeScreenState extends State<HomeScreen> {
               onPressed: _isListening ? _stopListening : _startListening,
               child: Text(_isListening ? 'Stop Recording' : 'Start Recording'),
             ),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
             Text(
               "Confidence: ${(_confidence * 100.0).toStringAsFixed(1)}%",
             ),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
             if (listOfRecognizedText.isNotEmpty)
               Text(
                 listOfRecognizedText.join(' '),
