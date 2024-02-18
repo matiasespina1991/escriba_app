@@ -1,7 +1,8 @@
+import 'package:escriba_app/screens/audio_to_text_screen/audio_to_text_screen.dart';
+import 'package:escriba_app/screens/speech_to_text_screen/speech_to_text_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:escriba_app/providers/authorization_provider.dart';
-import 'package:escriba_app/screens/home_screen/home_screen.dart';
 import 'package:escriba_app/screens/loading_screen/loading_screen.dart';
 import 'package:escriba_app/screens/login_screen/login_screen.dart';
 import 'package:escriba_app/theme/EscribaTheme.dart';
@@ -66,7 +67,7 @@ class _MainScreenState extends State<MainScreen> {
         if (!isAuthenticated) {
           return const LoginScreen();
         }
-        return const SpeechToTextScreen();
+        return const AudioToTextScreen();
       },
       child: const LoadingScreen(),
     );
